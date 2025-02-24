@@ -59,6 +59,9 @@ extern double pi=3.1416;    // 定义
 * 引用：将引用和初始值绑定，而非拷贝。**引用无法重新绑定到另一个对象，必须初始化**。
 * **引用不是对象，不能定义引用的引用**，是为一个已经存在的对象，起的另一个名字。
 * **引用只能绑定在对象上，不能绑定字面值**。
+* 引用类型与绑定对象的类型，必须严格一致。两种例外情况：
+    1. 初始化常量时，允许任意表达式；
+    2. 允许为常量引用，绑定非常量的对象、字面值。
 ```C
 int ival=1024;
 int &refVal=ival;   // refVal指向ival
@@ -105,4 +108,164 @@ r=&i;   // 给r赋值i，即：令p指向i
 ```C
 extern const int bufSize=fcn(); // file_1.cc定义并初始化常量，能被其他文件访问
 extern const int bufSize;   // file_1.h头文件：与file_1.cc中定义的buffSize是同一个
+```
+#### 2.4.1 常量引用
+1. 对const的引用：**初始化常量引用时，允许任意类型**表达式。（一般情况下，引用与绑定对象的类型需严格一致）
+> ```C
+> double dval=3.14;
+> const int &ri=dval;
+> // 第2行等同于：
+> const int temp=dval;  // 由双精度浮点数，生成一个临时的整型变量
+> const int &ri=temp;   // 让ri绑定这个临时量
+> ```
+
+2. const引用，可以引用一个非const的对象
+```C
+int i=42;
+int &r1=i;  // r1绑定对象i
+const int &r2=i;    // r2绑定对象i，但不允许通过r2修改i的值
+r1=0;
+r2=0;
+```
+
+#### 2.4.2 const和指针
+##### 指向常量的指针(pointer to const)：
+* 解释：”自以为“指向常量：可以指向常量/变量，但是不可以改变所指对象的值
+1. 不能通过指针改变常量；
+```C
+const double pi=3.14;
+double *ptr=&pi;    // 不可以用普通指针，指向常量；需要使用指向常量的指针
+const double *cptr=&pi;  
+*cptr=42;   // 错误：不能通过指针改变常量   
+```
+
+2. 允许一个指向常量的指针，指向非常量对象（不允许普通指针指向常量）：
+```C
+double dval=3.14;
+cptr=&dval;     // 正确：可以指向非常量；但不能通过cptr改变dval的值
+```
+
+##### 常量指针(const pointer)：
+* 指针本身是一个常量，即指向的对象不改变；但是可以通过指针改变指向对象的值
+```C
+int errNum=0;
+int *const curErr=&errNum;  // curErr一直是指向errNum
+*curErr=0;  // 正确：可以通过指针，改变指向对象curErr的值
+
+const double pi=3.14;
+const double *const pip=&pi;    // pip是一个指向常量对象的常量指针
+*pip=2.72;  // 错误：pip是一个指向常量对象的常量指针
+```
+
+#### 2.4.3 顶层const & 底层const
+* 顶层const：常量指针；底层const：指针指向常量。
+
+#### 2.4.4 constexpr和常量表达式
+* 常量表达式：值不会改变，在**编译过程能得到计算结果**的表达式。
+```C
+int staff_size=27;  // 不是const int，不属于常量表达式
+const int sz=get_size();    // sz具体指在运行时才能获取，不是常量表达式
+```
+* 将变量声明为constexpr类型（编译器验证是否为常量表达式）：一定是常量，必须用常量表达式初始化
+
+##### 字面值类型
+* 算术类型、引用、指针属于字面值类型；
+* constexpr指针不能指向函数体内定义的变量（一般不存放在固定地址）
+
+##### 指针和constexpr
+* constexpr仅对指针有效，与指针所指对象无关
+```C
+const int *p=nullptr;   // p是指向常量的指针
+constexpr int *q=nullptr;   // q是指向整数的常量指针（constexpr把所定义的对象置为顶层const)
+```
+
+#### 2.4.5 总结
+##### const作用
+1. 修饰变量，说明该变量不可以被改变；
+2. 修饰指针，分为指向常量的指针（pointer to const）和自身是常量的指针（常量指针，const pointer）；
+3. 修饰引用，指向常量的引用（reference to const），用于形参类型，即避免了拷贝，又避免了函数对值的修改；
+4. 修饰成员函数，说明该成员函数内不能修改成员变量。
+
+##### const的指针和引用
+* 指针：
+    * 指向常量的指针（pointer to const)
+    * 自身是常量的指针（常量指针，const pointer)
+
+* 引用：
+    * 指向常量的引用（reference to const)
+    * 没有const reference，因为引用只是对象的别名，引用不是对象，不能用 const 修饰
+
+##### 使用
+```C
+// 类
+class A
+{
+private:
+    const int a;                // 常对象成员，可以使用初始化列表或者类内初始化
+
+public:
+    // 构造函数
+    A() : a(0) { };
+    A(int x) : a(x) { };        // 初始化列表
+
+    // const可用于对重载函数的区分
+    int getValue();             // 普通成员函数
+    int getValue() const;       // 常成员函数，不得修改类中的任何数据成员的值
+};
+
+void function()
+{
+    // 对象
+    A b;                        // 普通对象，可以调用全部成员函数
+    const A a;                  // 常对象，只能调用常成员函数
+    const A *p = &a;            // 指针变量，指向常对象
+    const A &q = a;             // 指向常对象的引用
+
+    // 指针
+    char greeting[] = "Hello";
+    char* p1 = greeting;                // 指针变量，指向字符数组变量
+    const char* p2 = greeting;          // 指针变量，指向字符数组常量（const 后面是 char，说明指向的字符（char）不可改变）
+    char* const p3 = greeting;          // 自身是常量的指针，指向字符数组变量（const 后面是 p3，说明 p3 指针自身不可改变）
+    const char* const p4 = greeting;    // 自身是常量的指针，指向字符数组常量
+}
+
+// 函数
+void function1(const int Var);           // 传递过来的参数在函数内不可变
+void function2(const char* Var);         // 参数指针所指内容为常量
+void function3(char* const Var);         // 参数指针为常量
+void function4(const int& Var);          // 引用参数在函数内为常量
+
+// 函数返回值
+const int function5();      // 返回一个常数
+const int* function6();     // 返回一个指向常量的指针变量，使用：const int *p = function6();
+int* const function7();     // 返回一个指向变量的常指针，使用：int* const p = function7();
+```
+#### 2.4.5 宏定义#define & const常量
+宏定义 #define	        const 常量
+宏定义，相当于字符替换	    常量声明
+预处理器处理	             编译器处理
+无类型安全检查	         有类型安全检查
+不分配内存	               要分配内存
+存储在代码段	            存储在数据段
+可通过 #undef 取消	      不可取消
+
+### 2.5 处理类型
+#### 2.5.1 类型别名
+1. typedef: typedef double wages;  // wages是double同义词
+2. 别名声明using：using SI=Sales_item;   
+
+#### 2.5.2 指针、常量、类型别名
+```C
+typedef char* pstring;
+```
+注意：`const pstring cstr=0;`不能直接展开为：`const char* pstring=0;`
+改写后，char为基础类型，*为声明的一部分，那么：`const char`为基本数据类型。
+因此：改写后，`cstr`为指向char的常量指针，而非指向char常量的指针。
+
+#### 2.5.3 auto类型说明符
+* auto使得编译器通过初始值推测：变量的类型。（auto定义的变量，必须有初始值）
+* 一条auto语句声明多个变量时，只能有一个初始基本类型。
+```C
+auto i=0,*p=&i;     // 正确
+auto sz=0,pi=3.14;  // 错误：sz和pi类型不一致
 ```
