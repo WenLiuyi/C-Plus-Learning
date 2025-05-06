@@ -25,11 +25,12 @@ torch.cuda.set_device(torch.distributed.get_rank())
 
 OpenRLHF SPMD ppo的系统架构如下：**PPOTrainer负责整个PPO算法的控制逻辑**。此时，**不同的模型在同一组卡和同一组进程上，按照不同的时间片运行SPMD**。这些共享同一组计算资源并按时间交替使用的模型被称为**colocate models**。
 
-![image-20250505154252017](/Users/lisa/Library/Application Support/typora-user-images/image-20250505154252017.png)
+![image](https://github.com/user-attachments/assets/dd8ee34c-57cb-40e2-971d-d6556b6d1a8d)
+
 
 然而，SPMD要求不同的模型串行执行，即使没有数据依赖的模型也难以实现并发。如果模型不需要占用全部计算卡，就会导致部分计算资源的闲置；此外，SPMD需要将多个模型的参数同时加载到一张计算卡上，如果不结合offload等技术，很容易引发显存OOM问题。
 
-![Refer to caption](https://arxiv.org/html/2405.11143v4/x1.png)
+![image](https://github.com/user-attachments/assets/4abde1d9-9e35-4a0f-977c-d583343e2184)
 
 那么如何实现这一点呢？OpenRLHF的方案是：**使用ray拉起**。在 Ray 的抽象下，各个模块都可以看成是独立的 multi-process training / generate，通过配置不同的placement group，从而使模块绑定到不同的卡上；模块之间的交互通过 Object Store 和 Object Ref 做数据收发来实现。
 
@@ -39,7 +40,7 @@ OpenRLHF SPMD ppo的系统架构如下：**PPOTrainer负责整个PPO算法的控
 
 OpenRLHF与Ray相关的架构图如下：
 
-![img](https://pic2.zhimg.com/v2-5baa7c95f3f0d668c7c9b674ad6b377f_1440w.jpg)
+![image](https://github.com/user-attachments/assets/a35dd36e-a523-4efa-9ee7-b2c5626956b1)
 
 ### Driver Process
 
@@ -120,7 +121,7 @@ class PPORayActorGroup:
 
 最后看看总流程：[OpenRLHF](https://github.com/OpenRLHF/OpenRLHF/tree/main)/[openrlhf](https://github.com/OpenRLHF/OpenRLHF/tree/main/openrlhf)/[cli](https://github.com/OpenRLHF/OpenRLHF/tree/main/openrlhf/cli)/[train_ppo_ray.py](https://github.com/OpenRLHF/OpenRLHF/blob/main/openrlhf/cli/train_ppo_ray.py)
 
-![image-20250505161131994](/Users/lisa/Library/Application Support/typora-user-images/image-20250505161131994.png)
+![image](https://github.com/user-attachments/assets/8e14c7b5-8874-41fa-9682-943f9ae26e8f)
 
 ```python
 def train(args):
@@ -294,11 +295,12 @@ def train(args):
 
 3. 将 prompt + responses 输入给 Critic/Reward/Reference，进行 inference，分别计算得得到 values、reward 和 log probs，将这些整合称为 experiences；
 
-   ![make-experience](/Users/lisa/Downloads/make-experience.png)
+   ![image](https://github.com/user-attachments/assets/00a966ac-617b-4773-9043-19b760644b96)
 
-4. 根据 experiences 多轮计算 actor loss 和 critic loss 并更新 Actor 和 Critic。
+5. 根据 experiences 多轮计算 actor loss 和 critic loss 并更新 Actor 和 Critic。
 
-   ![learning-stage](/Users/lisa/Downloads/learning-stage.png)
+   ![image](https://github.com/user-attachments/assets/f5d5a015-b787-48fd-9da0-6d80dab5f997)
+
 
 再纵向整理一次各个模块的工作流：
 
@@ -315,7 +317,7 @@ collocate 策略：将 actor 的 training engine 和 reference 的 inference eng
 
 #### 非共同部署
 
-![65ff6b0e6c79c0458eb393a82fe317a3](/Users/lisa/Downloads/65ff6b0e6c79c0458eb393a82fe317a3.png)
+![image](https://github.com/user-attachments/assets/f3e15332-fb63-4187-bd01-cd37550c496a)
 
 一个部署示例如下：
 
@@ -334,8 +336,7 @@ actor_model = PPORayActorGroup(
 
 #### 共同部署
 
-![061fc2406097f3f2c96fb8761a333721](/Users/lisa/Downloads/061fc2406097f3f2c96fb8761a333721.png)
-
+![image](https://github.com/user-attachments/assets/4928899f-a3b9-4ef7-ade8-ba666a91ac99)
 
 
 这里展示PPO-Actor和PPO-Reference的colocate策略：
@@ -378,7 +379,8 @@ else:
 
 ### 部署vllm_engines实例
 
-![714e25ca70375b7f3ebd2096aae4cfeb](/Users/lisa/Downloads/714e25ca70375b7f3ebd2096aae4cfeb.png)
+![image](https://github.com/user-attachments/assets/f5cdc856-7cf0-4b65-8dc2-fb88a85fb28c)
+
 
 对于**Rollout模块**：
 
@@ -413,13 +415,14 @@ vllm_engines.append(
 
 在OpenRLHF中，**Actor和Rollout是两个独立的模块，前者放在deepseed训练引擎，后者放在vLLM中，需要保持权重同步**。因此，当PPO-Actor更新时，ds_rank0需要和all_vllm_ranks进行通讯，最新的权重broadcast给所有vllm_ranks：
 
-![a0fb758226e2215f3b2a2111abbea90c](/Users/lisa/Downloads/a0fb758226e2215f3b2a2111abbea90c.png)
+![image](https://github.com/user-attachments/assets/b1ca12f1-c08d-4969-b6fe-123dfb3001f9)
+
 
 分成以下几个步骤：
 
 #### 创建通信组
 
-![cfc948f03d8fa712655235374a4f09cd](/Users/lisa/Downloads/cfc948f03d8fa712655235374a4f09cd.png)
+![image](https://github.com/user-attachments/assets/5863aef4-4eca-4d5e-a219-656512c81cbe)
 
 1. **PPO-Actor0（ds_rank0）所在的worker进程**：**通过handler引用，触发远端每个vllm_engine上的init_process_group操作，并将ds_rank0纳入通讯组**。[code](https://github.com/OpenRLHF/OpenRLHF/blob/bb46342711a203c457df2fbca5967fd0549557e0/openrlhf/trainer/ray/ppo_actor.py#L58)
 
