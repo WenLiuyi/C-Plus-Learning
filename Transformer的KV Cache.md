@@ -29,7 +29,7 @@ KV Cache的核心问题在于：占用大量内存和访存带宽；在生成阶
 
 下图展示了推理过程中，KV Cache对显存的占用情况：
 
-![image-20250504141922572](/Users/lisa/Library/Application Support/typora-user-images/image-20250504141922572.png)
+![image](https://github.com/user-attachments/assets/5e46fada-3201-4770-96d4-e6ad17943e21)
 
 ## Parameter Analysis of Transformer
 
@@ -174,9 +174,8 @@ class Attention(nn.Module):
         self.cache_v = torch.zeros((args.max_batch_size, args.max_seq_len, self.n_kv_heads, self.head_dim), device=args.device)
 ```
 
+![image](https://github.com/user-attachments/assets/60d4e5e3-d1ff-4a6d-8161-3bf0af50f1c8)
 
-
-![image-20250504144300805](/Users/lisa/Library/Application Support/typora-user-images/image-20250504144300805.png)
 
 ### prefill
 
@@ -213,7 +212,8 @@ $$
    $$
    x_{out}=softmax(\frac{Q_{cat}K_{pre}^T}{\sqrt{h}})·V_{cat}·W_{o}+x_{dec} 
    $$
-   ![](decode_kv_concat.png)
+   ![image](https://github.com/user-attachments/assets/2da4b7f0-adf6-4e71-a44c-70233dd5dda9)
+
 
 其中MHA的输出$x_{out}$被传递到 MLP；最后一个 Transformer 层的输出被发送到最终的预测层，以预测下一个 token。
 
@@ -223,7 +223,8 @@ $$
 
 在B方案中，使用输出token替换查询嵌入中的输入token，且KV Cache存储之前生成的 token。因此在计算attention score时，只需要使用一个查询token，再加上KV Cache中的已有 token 就可以了，节省了矩阵乘法的计算量。在处理大规模序列和大批量数据时，显著降低计算开销。
 
-![kv_cache_visual](/Users/lisa/Desktop/kv_cache_visual.png)
+![image](https://github.com/user-attachments/assets/971cbfa6-d45c-4fef-9345-5cdd15909e92)
+
 
 **MHA模块中：生成单个token的KV键值对，矩阵计算开销为$4*l*h^2$**.
 
