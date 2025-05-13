@@ -12,7 +12,7 @@
 ### 网络结构
 
 * RNN通过使用**带自反馈的神经元**，能够处理**任意长度的序列**
-* ![image-20250423115753562](/Users/lisa/Library/Application Support/typora-user-images/image-20250423115753562.png)
+* ![image](https://github.com/user-attachments/assets/62502773-a6d5-422f-8d28-b202b004bfc6)
 
 * **时序**sequence：RNN能建模序列数据，序列指的是前、后输入数据$(x^{(t)}, x^{(t+1)})$不独立，相互影响；
 * **循环**recurrent：**对每个输入的操作都是一样的**，循环往复地重复这些相同操作，**每时刻有相同参数W和U（参数共享）**；
@@ -20,11 +20,12 @@
 
 ### 正向计算
 
-![image-20250423120108843](/Users/lisa/Library/Application Support/typora-user-images/image-20250423120108843.png)
+![image](https://github.com/user-attachments/assets/d7b465a6-b90b-463f-a97d-e8c2318c363c)
 
 ### 反向传播BPTT
 
-![image-20250423120202602](/Users/lisa/Library/Application Support/typora-user-images/image-20250423120202602.png)
+![image](https://github.com/user-attachments/assets/ee74f32b-101c-4f5a-8943-d2d640e2c5b1)
+
 
 ### 梯度消失 / 梯度爆炸
 
@@ -46,13 +47,13 @@ Simple RNN -> Contextualize RNN -> Contextualized RNN with attention -> Transfor
 
 #### Simple RNN
 
-![image-20250423125405263](/Users/lisa/Library/Application Support/typora-user-images/image-20250423125405263.png)
+![image](https://github.com/user-attachments/assets/058602ce-15f0-40f5-8d83-7cbe840a3365)
 
 >**RNN Encoder-Decoder**：
 >
 >出现背景：传统RNN架构仅适用于输入输出等长的任务；RNN Encoder-Decoder使用一个**定长状态机**作为输入输出桥梁，以实现对**输入输出都是变长序列**的处理。
 >
->![image-20250513145409435](/Users/lisa/Library/Application Support/typora-user-images/image-20250513145409435.png)
+>![image](https://github.com/user-attachments/assets/0872f351-4160-4c88-b932-c4d8e423ddd4)
 >
 >处理过程：
 >
@@ -98,14 +99,13 @@ Simple RNN -> Contextualize RNN -> Contextualized RNN with attention -> Transfor
 
 **decoder在每个timestep的input上都会加上一个context**：在decoder的每一步，都把源端的整个句子的信息和target端当前的token一起输入到RNN中，防止源端的context信息随着timestep的增长而衰减。
 
-![image-20250423125851918](/Users/lisa/Library/Application Support/typora-user-images/image-20250423125851918.png)
+![image](https://github.com/user-attachments/assets/f0fa2e6d-0465-409c-b536-6dc158cafe8d)
 
 但是还有一个问题：**context对于每个timestep都是静态的**(encoder端的final hidden states，或者是所有timestep的output的平均值)。但是每个decoder端的token在解码时，用到的context真的应该是一样的吗？
 
 #### Contextualized RNN with soft align (Attention)
 
-![image-20250423130411293](/Users/lisa/Library/Application Support/typora-user-images/image-20250423130411293.png)
-
+![image](https://github.com/user-attachments/assets/77316224-3539-4035-952b-62c467d528a1)
 
 
 ### RNN的优缺点
@@ -140,13 +140,11 @@ RNN缺点如下：
 
 ## 长短期记忆模型（LSTM）
 
-![image-20250423120545805](/Users/lisa/Library/Application Support/typora-user-images/image-20250423120545805.png)
+![image](https://github.com/user-attachments/assets/8bbf8e02-f827-4984-b7cc-6720a6b567b9)
 
-![image-20250423120800293](/Users/lisa/Library/Application Support/typora-user-images/image-20250423120800293.png)
+![image](https://github.com/user-attachments/assets/ccf70f64-3744-4ca1-b02d-6867cbfac791)
 
-
-
-![image-20250423120911255](/Users/lisa/Library/Application Support/typora-user-images/image-20250423120911255.png)
+![image](https://github.com/user-attachments/assets/fc01f0a1-8102-455f-9006-1b5b5ab54993)
 
 ## Transformer
 
@@ -158,9 +156,7 @@ RNN缺点如下：
 * **注意力模型**：**输入**为**特征向量F**和**查询向量q**，**输出**是**上下文向量c**；
 * **输出模型**：使用上下文向量c，将各个部分组合成最终的高级特征向量y（例如输出模型可以是softmax层，输出一个预测）
 
-
-
-![image-20250513165400071](/Users/lisa/Library/Application Support/typora-user-images/image-20250513165400071.png)
+![image](https://github.com/user-attachments/assets/bb2b2db9-50d3-4a5c-ba33-d8a1c434f085)
 
 ### 注意力模型
 
@@ -177,7 +173,7 @@ RNN缺点如下：
 >
 > 在查找中，目标序列中每个token用自己的query，去和源序列每个token的key计算得到**对齐系数**，代表token之间的相似度或者相关性：**query和key越相似，就代表value对query的影响力越大，query越需要吸收value的信息**。随后query会根据两个词之间的亲密关系，来决定从V中提取出多少信息出来融入到自身。
 
-![image-20250513165258954](/Users/lisa/Library/Application Support/typora-user-images/image-20250513165258954.png)
+![image](https://github.com/user-attachments/assets/5d6cabc4-5991-4f15-9beb-2396ab4f51b7)
 
 ### 计算流程
 
@@ -188,25 +184,25 @@ RNN缺点如下：
 5. **更新Decoder的隐状态**；
 6. Decoder计算输出预测token：**输入为Decoder前一次的输出、Decoder当前状态和Decoder当前时刻的Context**，输出为一个概率分布，表示：**每个可能的token作为当前输出的概率**。
 
-![image-20250513172420430](/Users/lisa/Library/Application Support/typora-user-images/image-20250513172420430.png)
+![image](https://github.com/user-attachments/assets/0dd1ae56-1839-49f9-9667-4a868b65bbd1)
 
 ### 思想
 
 1. **增大信息含量**：
 
-   ![image-20250513174348095](/Users/lisa/Library/Application Support/typora-user-images/image-20250513174348095.png)
+   ![image](https://github.com/user-attachments/assets/66ce4cb7-5190-4805-90b6-bb4006ab5200)
 
    * **RNN**：Decoder将所有context压缩到一个固定大小隐向量，不同阶段均使用相同的隐向量。上下文较长时，表达能力有限；
    * **TTT**：context压缩到模型权重中，增强了表达能力；
    * **self-attention**：使用一个列表（**KV Cache**）存储所有context，**无压缩**。不像RNN只传递一个Decoder最终的隐状态，而是**传入所新token就可以和过去所有context进行交互**。
 
-2. **缩短token间距**：任意两个token之间**建立了distance = 1的平行关系，从而解决RNN的长路径依赖问题(distance = N)**，平等地看待每一个token，无前后偏好；取消RNN的递归限制，支持并行。
+3. **缩短token间距**：任意两个token之间**建立了distance = 1的平行关系，从而解决RNN的长路径依赖问题(distance = N)**，平等地看待每一个token，无前后偏好；取消RNN的递归限制，支持并行。
 
-3. **动态生成权重**：CNN/全连接层使用静态权重，在训练时候固定，在推理时**注意力机制使用动态权重，由输入的query、key通过相似度计算而得**，是一种自适应操作。
+4. **动态生成权重**：CNN/全连接层使用静态权重，在训练时候固定，在推理时**注意力机制使用动态权重，由输入的query、key通过相似度计算而得**，是一种自适应操作。
 
-4. **对齐**：注意力机制应用在序列转换的源序列和目标序列之间。
+5. **对齐**：注意力机制应用在序列转换的源序列和目标序列之间。
 
-5. **双向context融合**：可以同时从左到右和从右到左读取输入序列，并将每个时间步的隐状态拼接起来作为输出；允许Encoder同时考虑输入序列中，每个单词的前后上下文信息。（在此之前只有BiLSTM，但是其本质只是两个单向建模的叠加，而不是Transformer这种彻底的context融合）
+6. **双向context融合**：可以同时从左到右和从右到左读取输入序列，并将每个时间步的隐状态拼接起来作为输出；允许Encoder同时考虑输入序列中，每个单词的前后上下文信息。（在此之前只有BiLSTM，但是其本质只是两个单向建模的叠加，而不是Transformer这种彻底的context融合）
 
 ### 不足
 
