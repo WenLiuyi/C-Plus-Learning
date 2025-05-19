@@ -363,7 +363,7 @@ MQA的核心思想是：**所有注意力头共享一份Key和Value矩阵，仅�
 >
 > 因此绿色部分较难优化，输入序列越长，瓶颈越大。
 
-![image-20250519150108704](/Users/lisa/Library/Application Support/typora-user-images/image-20250519150108704.png)
+![image](https://github.com/user-attachments/assets/f5b05d4f-2ffa-4c6d-8228-befa81d07829)
 
 > 与MHA对比：
 >
@@ -415,7 +415,7 @@ MQA的核心思想是：**所有注意力头共享一份Key和Value矩阵，仅�
 
 数学公式：
 
-![image-20250519145533531](/Users/lisa/Library/Application Support/typora-user-images/image-20250519145533531.png)
+![image](https://github.com/user-attachments/assets/9e3cc4fc-6a1f-407e-8bf9-bec8b3f7cbce)
 
 MQA代码实现：
 
@@ -493,7 +493,7 @@ MQA所需要缓存的KV值，从所有头减为一个头，KV Cache减少为之�
 
 性能测试如下：
 
-![image-20250519151043109](/Users/lisa/Library/Application Support/typora-user-images/image-20250519151043109.png)
+![image](https://github.com/user-attachments/assets/f0b36387-8dae-4bc6-8657-5d1b7fc103c0)
 
 1. 训练速度基本不变；
 2. 推理时间和beam-search时间大幅缩短；
@@ -512,9 +512,7 @@ MQA所需要缓存的KV值，从所有头减为一个头，KV Cache减少为之�
 
 在多卡并行情况下，**MQA减少了访存，但是增加了并行通信开销**。由于**K和V张量在所有头部之间共享，每个GPU上都需要有自己的备份**。与下图(a)中MHA并行策略相比，**MQA需要使用all-to-all对进行输入输出激活张量resharding，从而产生额外的通信成本**。具体如下图(b)所示。另外，因为每个卡上都有备份，这可能会导致MQA的内存成本节省将会丧失。
 
-![image-20250519152313397](/Users/lisa/Library/Application Support/typora-user-images/image-20250519152313397.png)
-
-
+![image](https://github.com/user-attachments/assets/323c0791-c60b-4b1d-be34-895ba683afdd)
 
 ## GQA
 
@@ -599,9 +597,7 @@ class GQA(nn.Module):
 
 MHA，MLA，MQA对比：
 
-![image-20250519145719543](/Users/lisa/Library/Application Support/typora-user-images/image-20250519145719543.png)
-
-
+![image](https://github.com/user-attachments/assets/e48a5ed1-a690-4435-a41c-4ea9d262804d)
 
 在MHA下，对于所有输入批次和序列中的每个token，KV Cache的总大小为：
 $$
@@ -609,7 +605,7 @@ $$
 $$
 其中，$b$为batch size，$l$为总序列长度（输入+输出序列），$h$为注意力头数量，$d$为每个head的维度，$n$为层数。
 
-![image-20250519171717189](/Users/lisa/Library/Application Support/typora-user-images/image-20250519171717189.png)
+![image](https://github.com/user-attachments/assets/a2987e1f-e6bf-4e39-9a72-1c7532fae2f8)
 
 上图中，$g$为KV头的组数。当$g=h$时是MLA；当$g=1$时是MQA；当$1<g<h$时，只将KV Cache压缩到$\frac{g}{h}$。
 
